@@ -37,15 +37,42 @@ async function getAnswer(question, category, env) {
 }
 
 function getCategoryFromContext(body) {
-  const context = body.contexts?.find(
-    c => c.name === "selected_category"
-  );
+  const contexts = body.contexts || [];
 
-  return (
-    context?.params?.category?.value ||
-    context?.params?.category ||
-    ""
-  );
+  const categoryList = [
+    "현수막",
+    "해수",
+    "종량제",
+    "자전거",
+    "공원등",
+    "보안등",
+    "주차장",
+    "견인",
+    "체육센터",
+    "서창",
+    "수영장",
+    "물빛"
+  ];
+
+  for (const category of categoryList) {
+    const normalizedCategory = category
+      .replace(/\s/g, "")
+      .toLowerCase();
+
+    const matched = contexts.some(c => {
+      const contextName = String(c.name || "")
+        .replace(/\s/g, "")
+        .toLowerCase();
+
+      return contextName === normalizedCategory;
+    });
+
+    if (matched) {
+      return category;
+    }
+  }
+
+  return "";
 }
 
 export default {
@@ -83,17 +110,6 @@ export default {
               {
                 simpleText: {
                   text: answer
-                }
-              }
-            ]
-          },
-          context: {
-            values: [
-              {
-                name: "selected_category",
-                lifeSpan: 10,
-                params: {
-                  category: category
                 }
               }
             ]
