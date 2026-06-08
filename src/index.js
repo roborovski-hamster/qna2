@@ -13,26 +13,29 @@ async function getAnswer(question, category, env) {
     .replace(/\s/g, "")
     .toLowerCase();
 
-  for (const row of data) {
-    const rowCategory = String(row.category || "")
-      .replace(/\s/g, "")
-      .toLowerCase();
-
-    if (rowCategory !== selectedCategory) {
-      continue;
-    }
-
-    const keywords = String(row.keyword || "")
-      .split(",")
-      .map(v => v.replace(/\s/g, "").toLowerCase())
-      .filter(v => v);
-
-    for (const keyword of keywords) {
-      if (userText.includes(keyword)) {
-        return row.answer;
+    for (const row of data) {
+      const rowCategories = String(row.category || "")
+        .split(",")
+        .map(v => v.replace(/\s/g, "").toLowerCase())
+        .filter(v => v);
+    
+      const categoryMatched = rowCategories.includes(selectedCategory);
+    
+      if (!categoryMatched) {
+        continue;
+      }
+    
+      const keywords = String(row.keyword || "")
+        .split(",")
+        .map(v => v.replace(/\s/g, "").toLowerCase())
+        .filter(v => v);
+    
+      for (const keyword of keywords) {
+        if (userText.includes(keyword)) {
+          return row.answer;
+        }
       }
     }
-  }
 
   return `매칭 실패
 입력 category: ${category}
