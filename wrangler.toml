@@ -1,0 +1,3 @@
+name = "kakao-skill"
+main = "src/index.js"
+compatibility_date = "2026-06-08"
