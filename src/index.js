@@ -81,7 +81,7 @@ export default {
             outputs: [
               {
                 simpleText: {
-                  text: "오류가 발생했습니다."
+                 text: "오류가 발생했습니다: " + error.message
                 }
               }
             ]
