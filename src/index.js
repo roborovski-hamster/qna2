@@ -25,7 +25,7 @@ async function getAnswer(question) {
 }
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
 
     if (request.method === "GET" && url.pathname === "/") {
@@ -43,7 +43,7 @@ export default {
           body.userRequest?.utterance ||
           "";
 
-        const answer = await getAnswer(utterance);
+        const answer = await getAnswer(utterance, env);
 
         return Response.json({
           version: "2.0",
