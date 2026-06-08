@@ -19,10 +19,7 @@ async function getAnswer(question, category, env) {
       .map(v => v.replace(/\s/g, "").toLowerCase())
       .filter(v => v);
 
-    const categoryMatched =
-      rowCategories.includes(selectedCategory);
-
-    if (!categoryMatched) continue;
+    if (!rowCategories.includes(selectedCategory)) continue;
 
     const keywords = String(row.keyword || "")
       .split(",")
@@ -36,7 +33,19 @@ async function getAnswer(question, category, env) {
     }
   }
 
-  return `해당 질문에 대한 답변이 없습니다.`;
+  return "해당 질문에 대한 답변이 없습니다.";
+}
+
+function getCategoryFromContext(body) {
+  const context = body.contexts?.find(
+    c => c.name === "selected_category"
+  );
+
+  return (
+    context?.params?.category?.value ||
+    context?.params?.category ||
+    ""
+  );
 }
 
 export default {
@@ -56,15 +65,16 @@ export default {
         const body = await request.json();
 
         const category =
-          body.action?.params?.category || "";
+          body.action?.params?.category ||
+          getCategoryFromContext(body) ||
+          "";
 
         const utterance =
           body.action?.params?.keyword ||
           body.userRequest?.utterance ||
           "";
 
-        const answer =
-          await getAnswer(utterance, category, env);
+        const answer = await getAnswer(utterance, category, env);
 
         return Response.json({
           version: "2.0",
@@ -73,6 +83,17 @@ export default {
               {
                 simpleText: {
                   text: answer
+                }
+              }
+            ]
+          },
+          context: {
+            values: [
+              {
+                name: "selected_category",
+                lifeSpan: 10,
+                params: {
+                  category: category
                 }
               }
             ]
