@@ -1,4 +1,4 @@
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw8uzwp_8sAawPNPAIl8XEdpU24GwjK96vIpFYYTatYSmVwyaNk1vikH61xh8MWYZSf3g/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw8uzwp_8sAawPNPAIl8XEdpU24GwjK96vIpFYYTatYSmVwyaNk1vikH61xh8MWYZSf3g/exec?token=${env.TOKEN}";
 
 async function getAnswer(question) {
   const response = await fetch(SHEET_API_URL);
