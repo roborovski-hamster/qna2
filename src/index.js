@@ -25,47 +25,37 @@ async function getAnswer(question, category, env) {
     }
   }
 
-  return `해당 질문에 대한 답변이 없습니다.
-입력 category: ${category}
-입력 keyword: ${question}
-시트 첫 번째 category: ${data[0]?.category}
-시트 첫 번째 keyword: ${data[0]?.keyword}`;
+  return "해당 질문에 대한 답변이 없습니다.";
+}
+
+function getContexts(body) {
+  return (
+    body.contexts ||
+    body.userRequest?.contexts ||
+    body.bot?.contexts ||
+    body.action?.contexts ||
+    []
+  );
+}
+
+function getContextNames(body) {
+  const contexts = getContexts(body);
+
+  return contexts
+    .map(c => c.name || c.id || JSON.stringify(c))
+    .filter(v => v);
 }
 
 function getCategoryFromContext(body) {
-  const contexts =
-    body.contexts ||
-    body.bot?.contexts ||
-    body.action?.clientExtra?.contexts ||
-    [];
+  const contextNames = getContextNames(body);
 
-  console.log("CONTEXTS:", JSON.stringify(contexts, null, 2));
-
-    const categoryList = [
-    "현수막",
-    "해수",
-    "종량제",
-    "자전거",
-    "공원등",
-    "보안등",
-    "주차장",
-    "견인",
-    "체육센터",
-    "서창",
-    "수영장",
-    "물빛"
-  ];
+  const categoryList = ["현수막", "해수", "종량제"];
 
   for (const category of categoryList) {
-    const normalizedCategory = category.replace(/\s/g, "").toLowerCase();
-
-    const matched = contexts.some(c => {
-      const contextName = String(c.name || "")
-        .replace(/\s/g, "")
-        .toLowerCase();
-
-      return contextName === normalizedCategory;
-    });
+    const matched = contextNames.some(name =>
+      String(name).replace(/\s/g, "").toLowerCase() ===
+      category.replace(/\s/g, "").toLowerCase()
+    );
 
     if (matched) return category;
   }
@@ -89,7 +79,7 @@ export default {
       try {
         const body = await request.json();
 
-        console.log("BODY:", JSON.stringify(body, null, 2));
+        const contextNames = getContextNames(body);
 
         const category =
           body.action?.params?.category ||
@@ -101,9 +91,6 @@ export default {
           body.userRequest?.utterance ||
           "";
 
-        console.log("CATEGORY:", category);
-        console.log("KEYWORD:", utterance);
-
         const answer = await getAnswer(utterance, category, env);
 
         return Response.json({
@@ -112,16 +99,19 @@ export default {
             outputs: [
               {
                 simpleText: {
-                  text: answer
+                  text:
+`${answer}
+
+[디버그]
+입력 keyword: ${utterance}
+인식 category: ${category || "없음"}
+넘어온 context 이름: ${contextNames.length ? contextNames.join(", ") : "없음"}`
                 }
               }
             ]
           }
         });
       } catch (error) {
-        console.log("ERROR:", error.message);
-        console.log(error.stack);
-
         return Response.json({
           version: "2.0",
           template: {
@@ -137,9 +127,6 @@ export default {
       }
     }
 
-    return Response.json(
-      { error: "Not Found" },
-      { status: 404 }
-    );
+    return Response.json({ error: "Not Found" }, { status: 404 });
   }
 };
