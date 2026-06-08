@@ -1,4 +1,5 @@
 const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzCLyjEUJ9bCycMtsSeTW90dWnHnZYcv_N_f3hjC8lCcZVsW4PneFJVYr8Tc137JHBgRg/exec?token=${env.TOKEN}";
+//env.TOKEN 서버 secrets에서 확인
 
 async function getAnswer(question) {
   const response = await fetch(SHEET_API_URL);
