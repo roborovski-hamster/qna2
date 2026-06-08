@@ -1,15 +1,27 @@
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzCLyjEUJ9bCycMtsSeTW90dWnHnZYcv_N_f3hjC8lCcZVsW4PneFJVYr8Tc137JHBgRg/exec?token=${env.TOKEN}";
-//env.TOKEN 서버 secrets에서 확인
+async function getAnswer(question, category, env) {
+  const response = await fetch(
+    `${env.SHEET_API_URL}?token=${env.TOKEN}`
+  );
 
-async function getAnswer(question) {
-  const response = await fetch(SHEET_API_URL);
   const data = await response.json();
 
   const userText = String(question || "")
     .replace(/\s/g, "")
     .toLowerCase();
 
+  const selectedCategory = String(category || "")
+    .replace(/\s/g, "")
+    .toLowerCase();
+
   for (const row of data) {
+    const rowCategory = String(row.category || "")
+      .replace(/\s/g, "")
+      .toLowerCase();
+
+    if (rowCategory !== selectedCategory) {
+      continue;
+    }
+
     const keywords = String(row.keyword || "")
       .split(",")
       .map(v => v.replace(/\s/g, "").toLowerCase())
@@ -22,7 +34,7 @@ async function getAnswer(question) {
     }
   }
 
-  return "해당 질문에 대한 답변이 없습니다.";
+  return `${category} 항목에서 해당 질문에 대한 답변이 없습니다.`;
 }
 
 export default {
@@ -39,12 +51,16 @@ export default {
       try {
         const body = await request.json();
 
+        const category =
+          body.action?.params?.category || "";
+
         const utterance =
           body.action?.params?.keyword ||
           body.userRequest?.utterance ||
           "";
 
-        const answer = await getAnswer(utterance, env);
+        const answer =
+          await getAnswer(utterance, category, env);
 
         return Response.json({
           version: "2.0",
