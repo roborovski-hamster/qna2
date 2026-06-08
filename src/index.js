@@ -34,7 +34,12 @@ async function getAnswer(question, category, env) {
     }
   }
 
-  return `${category} 항목에서 해당 질문에 대한 답변이 없습니다.`;
+  return `매칭 실패
+입력 category: ${category}
+입력 keyword: ${question}
+시트 첫 번째 category: ${data[0]?.category}
+시트 첫 번째 keyword: ${data[0]?.keyword}`;
+  //return `${category} 항목에서 해당 질문에 대한 답변이 없습니다.`;
 }
 
 export default {
