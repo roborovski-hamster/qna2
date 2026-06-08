@@ -1,17 +1,9 @@
 async function getAnswer(question, category, env) {
-  const response = await fetch(
-    `${env.SHEET_API_URL}?token=${env.TOKEN}`
-  );
-
+  const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
   const data = await response.json();
 
-  const userText = String(question || "")
-    .replace(/\s/g, "")
-    .toLowerCase();
-
-  const selectedCategory = String(category || "")
-    .replace(/\s/g, "")
-    .toLowerCase();
+  const userText = String(question || "").replace(/\s/g, "").toLowerCase();
+  const selectedCategory = String(category || "").replace(/\s/g, "").toLowerCase();
 
   for (const row of data) {
     const rowCategories = String(row.category || "")
@@ -33,13 +25,23 @@ async function getAnswer(question, category, env) {
     }
   }
 
-  return "해당 질문에 대한 답변이 없습니다.";
+  return `해당 질문에 대한 답변이 없습니다.
+입력 category: ${category}
+입력 keyword: ${question}
+시트 첫 번째 category: ${data[0]?.category}
+시트 첫 번째 keyword: ${data[0]?.keyword}`;
 }
 
 function getCategoryFromContext(body) {
-  const contexts = body.contexts || [];
+  const contexts =
+    body.contexts ||
+    body.bot?.contexts ||
+    body.action?.clientExtra?.contexts ||
+    [];
 
-  const categoryList = [
+  console.log("CONTEXTS:", JSON.stringify(contexts, null, 2));
+
+    const categoryList = [
     "현수막",
     "해수",
     "종량제",
@@ -55,9 +57,7 @@ function getCategoryFromContext(body) {
   ];
 
   for (const category of categoryList) {
-    const normalizedCategory = category
-      .replace(/\s/g, "")
-      .toLowerCase();
+    const normalizedCategory = category.replace(/\s/g, "").toLowerCase();
 
     const matched = contexts.some(c => {
       const contextName = String(c.name || "")
@@ -67,9 +67,7 @@ function getCategoryFromContext(body) {
       return contextName === normalizedCategory;
     });
 
-    if (matched) {
-      return category;
-    }
+    if (matched) return category;
   }
 
   return "";
@@ -91,6 +89,8 @@ export default {
       try {
         const body = await request.json();
 
+        console.log("BODY:", JSON.stringify(body, null, 2));
+
         const category =
           body.action?.params?.category ||
           getCategoryFromContext(body) ||
@@ -100,6 +100,9 @@ export default {
           body.action?.params?.keyword ||
           body.userRequest?.utterance ||
           "";
+
+        console.log("CATEGORY:", category);
+        console.log("KEYWORD:", utterance);
 
         const answer = await getAnswer(utterance, category, env);
 
@@ -116,6 +119,9 @@ export default {
           }
         });
       } catch (error) {
+        console.log("ERROR:", error.message);
+        console.log(error.stack);
+
         return Response.json({
           version: "2.0",
           template: {
