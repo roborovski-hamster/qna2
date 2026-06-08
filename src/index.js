@@ -13,36 +13,30 @@ async function getAnswer(question, category, env) {
     .replace(/\s/g, "")
     .toLowerCase();
 
-    for (const row of data) {
-      const rowCategories = String(row.category || "")
-        .split(",")
-        .map(v => v.replace(/\s/g, "").toLowerCase())
-        .filter(v => v);
-    
-      const categoryMatched = rowCategories.includes(selectedCategory);
-    
-      if (!categoryMatched) {
-        continue;
-      }
-    
-      const keywords = String(row.keyword || "")
-        .split(",")
-        .map(v => v.replace(/\s/g, "").toLowerCase())
-        .filter(v => v);
-    
-      for (const keyword of keywords) {
-        if (userText.includes(keyword)) {
-          return row.answer;
-        }
+  for (const row of data) {
+    const rowCategories = String(row.category || "")
+      .split(",")
+      .map(v => v.replace(/\s/g, "").toLowerCase())
+      .filter(v => v);
+
+    const categoryMatched =
+      rowCategories.includes(selectedCategory);
+
+    if (!categoryMatched) continue;
+
+    const keywords = String(row.keyword || "")
+      .split(",")
+      .map(v => v.replace(/\s/g, "").toLowerCase())
+      .filter(v => v);
+
+    for (const keyword of keywords) {
+      if (userText.includes(keyword)) {
+        return row.answer;
       }
     }
+  }
 
-  return `매칭 실패
-입력 category: ${category}
-입력 keyword: ${question}
-시트 첫 번째 category: ${data[0]?.category}
-시트 첫 번째 keyword: ${data[0]?.keyword}`;
-  //return `${category} 항목에서 해당 질문에 대한 답변이 없습니다.`;
+  return `해당 질문에 대한 답변이 없습니다.`;
 }
 
 export default {
@@ -51,7 +45,9 @@ export default {
 
     if (request.method === "GET" && url.pathname === "/") {
       return Response.json({
-        status: "ok"
+        status: "ok",
+        hasSheetUrl: !!env.SHEET_API_URL,
+        hasToken: !!env.TOKEN
       });
     }
 
@@ -89,7 +85,7 @@ export default {
             outputs: [
               {
                 simpleText: {
-                 text: "오류가 발생했습니다."
+                  text: "오류가 발생했습니다: " + error.message
                 }
               }
             ]
