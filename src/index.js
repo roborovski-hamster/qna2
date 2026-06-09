@@ -48,20 +48,27 @@ export default {
         const body = await request.json();
         const contextName = getContextName(body); //이름
 
-        const category =
-          body.action?.params?.category || contextName;
+        const CATEGORY_LIST = [
+          "현수막",
+          "종량제",
+          "해수"
+        ];
+        
+        let category =
+          body.action?.params?.category || "";
 
-        const keyword =
+        let keyword =
           body.action?.params?.keyword ||
           body.userRequest?.utterance ||
           "";
 
-        console.log("categorry: ");
-        console.log(category);
-        console.log("keyword: ");
-        console.log(keyword);
-        console.log("contextName: ");
-        console.log(contextName);
+        const normalizedCategory = category.trim();
+        
+        if (!CATEGORY_LIST.includes(normalizedCategory)) {
+          keyword = category;
+          category = contextName;
+        }
+
         const answer = await getAnswer(keyword, category, env);
 
         return Response.json({
