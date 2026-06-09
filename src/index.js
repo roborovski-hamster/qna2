@@ -56,6 +56,12 @@ export default {
           body.userRequest?.utterance ||
           "";
 
+        console.log("categorry: ");
+        console.log(category);
+        console.log("keyword: ");
+        console.log(keyword);
+        console.log("contextName: ");
+        console.log(contextName);
         const answer = await getAnswer(keyword, category, env);
 
         return Response.json({
