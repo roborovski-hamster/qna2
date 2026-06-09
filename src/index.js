@@ -62,12 +62,6 @@ export default {
           body.userRequest?.utterance ||
           "";
 
-        const normalizedCategory = category.trim();
-        
-        if (!CATEGORY_LIST.includes(normalizedCategory) && keyword != "") {
-          keyword = category;
-          category = contextName;
-        }
 
         if (category === "비었음") {
               return Response.json({
@@ -82,6 +76,14 @@ export default {
             ]
           }
         });
+        }
+
+        
+        const normalizedCategory = category.trim();
+        
+        if (!CATEGORY_LIST.includes(normalizedCategory) && keyword != "") {
+          keyword = category;
+          category = contextName;
         }
 
         const answer = await getAnswer(keyword, category, env);
