@@ -69,6 +69,8 @@ export default {
           category = contextName;
         }
 
+        category = "현수막";
+
         const answer = await getAnswer(keyword, category, env);
 
         return Response.json({
