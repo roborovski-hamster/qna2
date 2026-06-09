@@ -8,7 +8,7 @@ async function getAnswer(category, keyword, env) {
   // 구글시트 전체 데이터 가져오기
   const data = await response.json();
 
-  const userText = String(question || "").replace(/\s/g, "").toLowerCase();
+  const userText = String(keyword || "").replace(/\s/g, "").toLowerCase();
   const selectedCategory = String(category || "").replace(/\s/g, "").toLowerCase();
 
   for (const row of data) {
