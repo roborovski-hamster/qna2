@@ -88,9 +88,7 @@ function createResponse2(row) {
         altText: row.answer || "이미지"
       }
     });
-  }
-
-  if (row.answer) {
+  } else if (row.answer) {
     outputs.push({
       simpleText: {
         text: row.answer
