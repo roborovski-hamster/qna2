@@ -60,7 +60,7 @@ export default {
           category = getContextName(body) || "";
         }
         
-        const keyword = body.action?.params?.keyword || ""; //키워드
+        const keyword = body.action?.params?.keyword || body.userRequest?.utterance || ""; //키워드
         
         const answer = await getAnswer(category,keyword,env); //답변
         return createResponse(answer);
