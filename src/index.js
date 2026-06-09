@@ -64,7 +64,7 @@ export default {
 
         const normalizedCategory = category.trim();
         
-        if (!CATEGORY_LIST.includes(normalizedCategory)) {
+        if (!CATEGORY_LIST.includes(normalizedCategory) && keyword != "") {
           keyword = category;
           category = contextName;
         }
