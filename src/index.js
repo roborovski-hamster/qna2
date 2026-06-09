@@ -92,7 +92,14 @@ function createResponse2(row) {
               description: row.answer || "",
               thumbnail: {
                 imageUrl: row.imageUrl
-              }
+              },
+              buttons: [
+                {
+                  action: "webLink",
+                  label: "이미지 크게 보기",
+                  webLinkUrl: row.imageUrl
+                }
+              ]
             }
           }
         ]
