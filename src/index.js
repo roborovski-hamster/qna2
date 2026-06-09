@@ -10,7 +10,7 @@ async function getAnswer(question, category, contextName, env) {
     "해수"
   ];
 
-  if (category == "비었음" %% contextName == "") {
+  if (category == "비었음" && contextName == "") {
     return "카테고리를 다시 선택해주세요.";  
   }
   
