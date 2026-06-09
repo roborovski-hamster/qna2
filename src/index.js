@@ -24,8 +24,7 @@ async function getAnswer(question, category, env) {
   return "해당 질문에 대한 답변이 없습니다.";
 }
 
-
-function getContextNames(body) {
+function getContextName(body) {
   const contexts =
     body.contexts ||
     body.userRequest?.contexts ||
@@ -33,11 +32,8 @@ function getContextNames(body) {
     body.action?.contexts ||
     [];
 
-  return contexts
-    .map(c => c.name)
-    .filter(v => v);
+  return contexts[0]?.name || "";
 }
-
 
 export default {
   async fetch(request, env) {
@@ -50,10 +46,10 @@ export default {
     if (request.method === "POST" && url.pathname === "/skill") {
       try {
         const body = await request.json();
-        const contextNames = getContextNames(body);
+        const contextName = getContextName(body); //이름
 
         const category =
-          body.action?.params?.category || "";
+          body.action?.params?.category || contextName;
 
         const keyword =
           body.action?.params?.keyword ||
@@ -68,7 +64,7 @@ export default {
             outputs: [
               {
                 simpleText: {
-                  text: JSON.stringify(contextNames)
+                  text: JSON.stringify({answer: answer, contextName: contextName})
                 }
               }
             ]
