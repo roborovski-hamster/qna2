@@ -5,7 +5,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/faq") {
-      return fetch(env.FAQ_URL);
+      return fetch(`${env.SHEET_API_URL}?page=faq`);
     } else if (request.method === "POST" && url.pathname === "/skill") {
       try {
         const body = await request.json();
