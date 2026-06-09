@@ -3,6 +3,7 @@ async function getAnswer(category, userKeyword, env) {
   const data = await response.json();
 
   let bestAnswer = "";
+  let bestRow = null;
   let bestScore = 0;
 
   for (const row of data) {
@@ -19,12 +20,14 @@ async function getAnswer(category, userKeyword, env) {
       if (score > bestScore) {
         bestScore = score;
         bestAnswer = row.answer;
+        bestRow = row;
       }
     }
   }
 
   if (bestScore >= 3) {
-    return bestAnswer;
+    //return bestAnswer;
+    return bestRow;
   }
 
   //return "해당 질문에 대한 답변이 없습니다.";
