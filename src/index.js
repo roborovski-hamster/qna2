@@ -88,7 +88,7 @@ function createResponse2(row) {
         outputs: [
           {
             basicCard: {
-              title: "안내",
+              title: "",
               description: row.answer || "",
               thumbnail: {
                 imageUrl: row.imageUrl
