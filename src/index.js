@@ -59,6 +59,9 @@ export default {
         if (category === "!없는카테고리") {
           category = getContextName(body) || "";
         }
+        if(category == "") {
+          return createResponse("카테고리를 다시 선택해주세요. (현수막 등..)");
+        }
         
         const keyword = body.action?.params?.keyword || body.userRequest?.utterance || ""; //키워드
         
