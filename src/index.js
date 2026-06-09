@@ -22,8 +22,22 @@ async function getAnswer(category, keyword, env) {
       .split(",")
       .map(v => v.replace(/\s/g, "").toLowerCase());
 
-    if (keywords.some(keyword => userText.includes(keyword))) {
-      return row.answer;
+    //if (keywords.some(keyword => userText.includes(keyword))) {
+    //  return row.answer;
+    //}
+    const userKeyword = keyword.replace(/\s/g, "");
+    const sheetKeywords = row.keyword
+      .split(",")
+      .map(v => v.replace(/\s/g, "").trim())
+      .filter(v => v);
+    
+    for (const sheetKeyword of sheetKeywords) {
+      if (
+        userKeyword.includes(sheetKeyword) ||
+        sheetKeyword.includes(userKeyword)
+      ) {
+        return row.answer;
+      }
     }
   }
 
