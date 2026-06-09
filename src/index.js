@@ -8,8 +8,21 @@ async function getAnswer(category, keyword, env) {
   // 구글시트 전체 데이터 가져오기
   const data = await response.json();
 
+  const userText = String(question || "").replace(/\s/g, "").toLowerCase();
+  const selectedCategory = String(category || "").replace(/\s/g, "").toLowerCase();
+
   for (const row of data) {
-    if (row.category === category && row.keyword === keyword) {
+    const categories = String(row.category || "")
+      .split(",")
+      .map(v => v.replace(/\s/g, "").toLowerCase());
+
+    if (!categories.includes(selectedCategory)) continue;
+
+    const keywords = String(row.keyword || "")
+      .split(",")
+      .map(v => v.replace(/\s/g, "").toLowerCase());
+
+    if (keywords.some(keyword => userText.includes(keyword))) {
       return row.answer;
     }
   }
