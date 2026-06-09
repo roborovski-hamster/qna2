@@ -35,7 +35,7 @@ function getContextNames(body) {
 
   return contexts
     .map(c => c.name)
-    .filter(v => v)[0];
+    .filter(v => v);
 }
 
 
