@@ -23,11 +23,12 @@ async function getAnswer(category, userKeyword, env) {
     }
   }
 
-  if (bestScore >= 5) {
+  if (bestScore >= 3) {
     return bestAnswer;
   }
 
-  return "해당 질문에 대한 답변이 없습니다.";
+  //return "해당 질문에 대한 답변이 없습니다.";
+  return null;
 }
 
 
@@ -58,8 +59,49 @@ function getScore(userText, sheetKeyword) {
 }
 
 
+// 답변 형식 생성
+function createResponse2(row) {
+  if (!row) {
+    return Response.json({
+      version: "2.0",
+      template: {
+        outputs: [
+          {
+            simpleText: {
+              text: "해당 질문에 대한 답변이 없습니다."
+            }
+          }
+        ]
+      }
+    });
+  }
 
+  const outputs = [];
 
+  if (row.imageUrl) {
+    outputs.push({
+      simpleImage: {
+        imageUrl: row.imageUrl,
+        altText: row.answer || "이미지"
+      }
+    });
+  }
+
+  if (row.answer) {
+    outputs.push({
+      simpleText: {
+        text: row.answer
+      }
+    });
+  }
+
+  return Response.json({
+    version: "2.0",
+    template: {
+      outputs
+    }
+  });
+}
 
 // 답변 형식 생성
 function createResponse(text) {
@@ -97,7 +139,7 @@ export default {
         const keyword = body.action?.params?.keyword || body.userRequest?.utterance || ""; //키워드
         
         const answer = await getAnswer(category,keyword,env); //답변
-        return createResponse(answer);
+        return createResponse2(answer);
       } catch (error) {
         return createResponse("오류가 발생했습니다.");
       }
