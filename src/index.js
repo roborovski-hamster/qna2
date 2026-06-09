@@ -69,7 +69,20 @@ export default {
           category = contextName;
         }
 
-        category = "현수막";
+        if (category === "비었음") {
+              return Response.json({
+          version: "2.0",
+          template: {
+            outputs: [
+              {
+                simpleText: {
+                  text: JSON.stringify({answer: "리스트의 카테고리를 다시 선택하세요. ㅇㅇ"})
+                }
+              }
+            ]
+          }
+        });
+        }
 
         const answer = await getAnswer(keyword, category, env);
 
