@@ -82,10 +82,20 @@ function createResponse2(row) {
   const outputs = [];
 
   if (row.imageUrl) {
-    outputs.push({
-      simpleImage: {
-        imageUrl: row.imageUrl,
-        altText: row.answer || "이미지"
+    return Response.json({
+      version: "2.0",
+      template: {
+        outputs: [
+          {
+            basicCard: {
+              title: "안내",
+              description: row.answer || "",
+              thumbnail: {
+                imageUrl: row.imageUrl
+              }
+            }
+          }
+        ]
       }
     });
   } else if (row.answer) {
