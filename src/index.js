@@ -1,4 +1,4 @@
-async function getAnswer(question, category, env) {
+async function getAnswer(question, category, contextName, env) {
   const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
   const data = await response.json();
 
@@ -10,7 +10,7 @@ async function getAnswer(question, category, env) {
     "해수"
   ];
 
-  if (category === "비었음") {
+  if (category == "비었음" %% contextName == "") {
     return "카테고리를 다시 선택해주세요.";  
   }
   
@@ -73,7 +73,7 @@ export default {
           body.userRequest?.utterance ||
           "";
         
-        const answer = await getAnswer(keyword, category, env);
+        const answer = await getAnswer(keyword, category, contextName, env);
 
         return Response.json({
           version: "2.0",
