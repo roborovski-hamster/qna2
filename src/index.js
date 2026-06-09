@@ -1,39 +1,15 @@
-async function getAnswer(question, category, contextName, env) {
-  const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
+
+//답변 읽어오기
+async function getAnswer(category, keyword, env) {
+  const response = await fetch(
+    `${env.SHEET_API_URL}?token=${env.TOKEN}`
+  );
+
+  // 구글시트 전체 데이터 가져오기
   const data = await response.json();
 
-  const normalizedCategory = category.trim();
-
-  const CATEGORY_LIST = [
-    "현수막",
-    "종량제",
-    "해수"
-  ];
-
-  if (category == "비었음" && contextName == "") {
-    return "카테고리를 다시 선택해주세요.";  
-  }
-  
-  if (!CATEGORY_LIST.includes(normalizedCategory) && keyword != "") {
-      keyword = category;
-      category = contextName;
-  }
- 
-  const userText = String(question || "").replace(/\s/g, "").toLowerCase();
-  const selectedCategory = String(category || "").replace(/\s/g, "").toLowerCase();
-
   for (const row of data) {
-    const categories = String(row.category || "")
-      .split(",")
-      .map(v => v.replace(/\s/g, "").toLowerCase());
-
-    if (!categories.includes(selectedCategory)) continue;
-
-    const keywords = String(row.keyword || "")
-      .split(",")
-      .map(v => v.replace(/\s/g, "").toLowerCase());
-
-    if (keywords.some(keyword => userText.includes(keyword))) {
+    if (row.category === category && row.keyword === keyword) {
       return row.answer;
     }
   }
@@ -41,14 +17,19 @@ async function getAnswer(question, category, contextName, env) {
   return "해당 질문에 대한 답변이 없습니다.";
 }
 
-function getContextName(body) {
-  const contexts =
-    body.contexts ||
-    body.userRequest?.contexts ||
-    body.bot?.contexts ||
-    body.action?.contexts ||
-    [];
+// 답변 형식 생성
+function createResponse(text) {
+  return Response.json({
+    version: "2.0",
+    template: {
+      outputs: [{simpleText: {text}}]
+    }
+  });
+}
 
+//out 컨텍스트 읽어오기
+function getContextName(body) {
+  const contexts = body.contexts || body.userRequest?.contexts || body.bot?.contexts || body.action?.contexts || [];
   return contexts[0]?.name || "";
 }
 
@@ -56,53 +37,28 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (request.method === "GET" && url.pathname === "/") {
-      return Response.json({ status: "ok" });
-    }
-
     if (request.method === "POST" && url.pathname === "/skill") {
       try {
         const body = await request.json();
-        const contextName = getContextName(body); //이름
+        const context = getContextName(body); //out컨텍스트
 
-         let category =
-          body.action?.params?.category || "";
-
-        let keyword =
-          body.action?.params?.keyword ||
-          body.userRequest?.utterance ||
-          "";
+        let category = body.action?.params?.category || "";
+        if (category === "!없는카테고리") {
+          category = getContextName(body) || "";
+        }
         
-        const answer = await getAnswer(keyword, category, contextName, env);
-
-        return Response.json({
-          version: "2.0",
-          template: {
-            outputs: [
-              {
-                simpleText: {
-                  text: JSON.stringify({answer: answer, contextName: contextName})
-                }
-              }
-            ]
-          }
-        });
+        const keyword = body.action?.params?.keyword || ""; //키워드
+        
+        const answer = await getAnswer(category,keyword,env); //답변
+        return createResponse(answer);
       } catch (error) {
-        return Response.json({
-          version: "2.0",
-          template: {
-            outputs: [
-              {
-                simpleText: {
-                  text: "오류가 발생했습니다."
-                }
-              }
-            ]
-          }
-        });
+        return createResponse("오류가 발생했습니다.");
       }
     }
 
-    return Response.json({ error: "Not Found" }, { status: 404 });
+    return Response.json(
+      { error: "Not Found" },
+      { status: 404 }
+    );
   }
 };
