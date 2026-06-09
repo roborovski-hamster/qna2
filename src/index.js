@@ -1,48 +1,65 @@
-
-//답변 읽어오기
-async function getAnswer(category, keyword, env) {
-  const response = await fetch(
-    `${env.SHEET_API_URL}?token=${env.TOKEN}`
-  );
-
-  // 구글시트 전체 데이터 가져오기
+async function getAnswer(category, userKeyword, env) {
+  const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
   const data = await response.json();
 
-  const userText = String(keyword || "").replace(/\s/g, "").toLowerCase();
-  const selectedCategory = String(category || "").replace(/\s/g, "").toLowerCase();
+  let bestAnswer = "";
+  let bestScore = 0;
 
   for (const row of data) {
-    const categories = String(row.category || "")
-      .split(",")
-      .map(v => v.replace(/\s/g, "").toLowerCase());
-
-    if (!categories.includes(selectedCategory)) continue;
+    if (normalize(row.category) !== normalize(category)) continue;
 
     const keywords = String(row.keyword || "")
       .split(",")
-      .map(v => v.replace(/\s/g, "").toLowerCase());
-
-    //if (keywords.some(keyword => userText.includes(keyword))) {
-    //  return row.answer;
-    //}
-    const userKeyword = keyword.replace(/\s/g, "");
-    const sheetKeywords = row.keyword
-      .split(",")
-      .map(v => v.replace(/\s/g, "").trim())
+      .map(v => v.trim())
       .filter(v => v);
-    
-    for (const sheetKeyword of sheetKeywords) {
-      if (
-        userKeyword.includes(sheetKeyword) ||
-        sheetKeyword.includes(userKeyword)
-      ) {
-        return row.answer;
+
+    for (const keyword of keywords) {
+      const score = getScore(userKeyword, keyword);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestAnswer = row.answer;
       }
     }
   }
 
+  if (bestScore >= 5) {
+    return bestAnswer;
+  }
+
   return "해당 질문에 대한 답변이 없습니다.";
 }
+
+
+function normalize(text) {
+  return String(text || "")
+    .replace(/\s/g, "")
+    .toLowerCase();
+}
+
+function getScore(userText, sheetKeyword) {
+  const user = normalize(userText);
+  const keyword = normalize(sheetKeyword);
+
+  if (!user || !keyword) return 0;
+
+  if (user === keyword) return 100;
+  if (user.includes(keyword)) return 90;
+  if (keyword.includes(user)) return 80;
+
+  let score = 0;
+
+  for (const char of user) {
+    if (keyword.includes(char)) {
+      score += 1;
+    }
+  }
+  return score;
+}
+
+
+
+
 
 // 답변 형식 생성
 function createResponse(text) {
