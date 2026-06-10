@@ -27,7 +27,7 @@ export default {
     } else if (url.pathname === "/faq") {
       const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
       const data = await response.json();
-      const ttml = createHtml(data);
+      const html = createHtml(data);
         return new Response(html, {
         headers: {
       "Content-Type": "text/html; charset=UTF-8"
