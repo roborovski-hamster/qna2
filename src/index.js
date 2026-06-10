@@ -4,9 +4,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/faq") {
-      return fetch(`${env.SHEET_API_URL}?page=faq`);
-    } else if (request.method === "POST" && url.pathname === "/skill") {
+  if (request.method === "POST" && url.pathname === "/skill") {
       try {
         const body = await request.json();
         const context = getContextName(body); //out컨텍스트
@@ -26,12 +24,21 @@ export default {
       } catch (error) {
         return createResponse("오류가 발생했습니다.");
       }
+    } else if (url.pathname === "/faq") {
+      const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
+      const data = await response.json();
+      const ttml = createHtml(data);
+        return new Response(html, {
+        headers: {
+      "Content-Type": "text/html; charset=UTF-8"
     }
-
-    return Response.json(
-      { error: "Not Found" },
-      { status: 404 }
-    );
+  });
+    } else {
+      return Response.json(
+        { error: "Not Found" },
+        { status: 404 }
+      );
+    }
   }
 };
 
@@ -175,4 +182,64 @@ function createResponse(text) {
 function getContextName(body) {
   const contexts = body.contexts || body.userRequest?.contexts || body.bot?.contexts || body.action?.contexts || [];
   return contexts[0]?.name || "";
+}
+
+function createHtml(data) {
+    let html = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전체 FAQ</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 16px;
+        background: #f7f7f7;
+        color: #222;
+      }
+      h1 { font-size: 22px; }
+      .item {
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      }
+      .category {
+        display: inline-block;
+        font-size: 12px;
+        background: #eee;
+        padding: 3px 8px;
+        border-radius: 20px;
+        margin-bottom: 8px;
+      }
+      .answer {
+        font-size: 15px;
+        white-space: pre-wrap;
+      }
+      img {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>전체 FAQ</h1>
+  `;
+
+  data.forEach(row => {
+    html += `
+      <div class="item">
+        <div class="category">${row.category || ""}</div>
+        <div class="answer">${row.answer || ""}</div>
+        ${row.imageUrl ? `<img src="${row.imageUrl}">` : ""}
+      </div>
+    `;
+  });
+  return html;
 }
