@@ -18,7 +18,8 @@ export default {
         //  return createResponse("카테고리가 초기화되었습니다. 리스트에서 카테고리를 다시 선택해주세요. (예)종량제 Q&A 등..");
         //}
         
-        const keyword = body.action?.params?.keyword || body.userRequest?.utterance || ""; //키워드
+        //const keyword = body.action?.params?.keyword || body.userRequest?.utterance || ""; //키워드
+        const keyword = body.userRequest?.utterance || ""; //키워드
         
         const answer = await getAnswer(category,keyword,env); //답변
         return createResponse2(answer);
