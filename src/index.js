@@ -7,15 +7,16 @@ export default {
   if (request.method === "POST" && url.pathname === "/skill") {
       try {
         const body = await request.json();
-        const context = getContextName(body); //out컨텍스트
+        //const context = getContextName(body); //out컨텍스트
 
-        let category = body.action?.params?.category || "";
-        if (category === "!없는카테고리") {
-          category = getContextName(body) || "";
-        }
-        if(category == "") {
-          return createResponse("카테고리가 초기화되었습니다. 리스트에서 카테고리를 다시 선택해주세요. (예)종량제 Q&A 등..");
-        }
+        const category = getContextName(body);
+        //let category = body.action?.params?.category || "";
+        //if (category === "!없는카테고리") {
+        //  category = getContextName(body) || "";
+        //}
+        //if(category == "") {
+        //  return createResponse("카테고리가 초기화되었습니다. 리스트에서 카테고리를 다시 선택해주세요. (예)종량제 Q&A 등..");
+        //}
         
         const keyword = body.action?.params?.keyword || body.userRequest?.utterance || ""; //키워드
         
