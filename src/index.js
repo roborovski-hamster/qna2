@@ -181,7 +181,7 @@ function createResponse(text) {
 //out 컨텍스트 읽어오기
 function getContextName(body) {
   const contexts = body.contexts || body.userRequest?.contexts || body.bot?.contexts || body.action?.contexts || [];
-  return contexts[0]?.name || "";
+  return contexts.length > 0? contexts[contexts.length - 1].name : "";
 }
 
 function createHtml(data) {
