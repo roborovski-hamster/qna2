@@ -1,29 +1,35 @@
-
 //메인
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-  // 유저가 카카오챗봇에서 키워드 직접 입력할 때 호출(/skill)
   if (request.method === "POST" && url.pathname === "/skill") {
       try {
         const body = await request.json();
-        //카테고리는 out 컨텍스트에서 불러온다. (가장 마지막 값)
-        const category = getContextName(body);
-        if (category == "") return createResponse("먼저 리스트에서 카테고리를 선택해주세요. (예) 현수막지정게시대 Q&A ");
+        //const context = getContextName(body); //out컨텍스트
 
-        //키워드 (패턴에서 읽어온다)
-        const keyword = body.userRequest?.utterance || "";
-        //답변
-        const answer = await getAnswer(category,keyword,env);
+        const category = getContextName(body);
+
+        if (category == "") {
+          return createResponse("먼저 리스트에서 카테고리를 선택해주세요. (예) 현수막지정게시대 Q&A ");
+        }
+        //const keyword = body.action?.params?.keyword || body.userRequest?.utterance || ""; //키워드
+        const keyword = body.userRequest?.utterance || ""; //키워드
+
+        const answer = await getAnswer(category,keyword,env); //답변
         return createResponse2(answer);
       } catch (error) {
         return createResponse("오류가 발생했습니다.");
       }
-    } else if (url.pathname === "/faq") {   // 유저가 전체 qna 리스트 페이지 오픈할 때
-      const data = getGoogleSheetData();
+    } else if (url.pathname === "/faq") {
+      const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
+      const data = await response.json();
       const html = createHtml(data);
-      return new Response(html, {headers: {"Content-Type": "text/html; charset=UTF-8"}});
+        return new Response(html, {
+        headers: {
+      "Content-Type": "text/html; charset=UTF-8"
+    }
+  });
     } else {
       return Response.json(
         { error: "Not Found" },
@@ -33,51 +39,50 @@ export default {
   }
 };
 
-// 기본 답변 형식 생성
-function createResponse(text) {
-  return Response.json({
-    version: "2.0",
-    template: {
-      outputs: [{simpleText: {text}}]
-    }
-  });
-}
 
-//구글 시트에서 전체 데이터 읽어오기
-async function getGoogleSheetData() {
-  const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
-  return await response.json();
-}
 
-//답변 스코어 계산해서 가장 높은 스코어의 답변 리턴
+
 async function getAnswer(category, userKeyword, env) {
-  const data = getGoogleSheetData();
+  const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
+  const data = await response.json();
 
+  let bestAnswer = "";
   let bestRow = null;
   let bestScore = 0;
 
   for (const row of data) {
-    // 구글시트의 카테고리와 사용자가 입력한 카테고리가 일치하지 않으면 넘어간다 
     if (normalize(row.category) !== normalize(category)) continue;
 
-    const keywords = String(row.keyword || "").split(",").map(v => normalize(v)).filter(v => v);
+    const keywords = String(row.keyword || "")
+      .split(",")
+      .map(v => v.trim())
+      .filter(v => v);
+
     for (const keyword of keywords) {
       const score = getScore(userKeyword, keyword);
 
       if (score > bestScore) {
         bestScore = score;
+        bestAnswer = row.answer;
         bestRow = row;
       }
     }
   }
 
-  if (bestScore >= 3) return bestRow;
+  if (bestScore >= 3) {
+    //return bestAnswer;
+    return bestRow;
+  }
+
+  //return "해당 질문에 대한 답변이 없습니다.";
   return null;
 }
 
-// null 방지, 띄어쓰기 없애고, 소문자로 변경
+
 function normalize(text) {
-  return String(text || "").replace(/\s/g, "").toLowerCase();
+  return String(text || "")
+    .replace(/\s/g, "")
+    .toLowerCase();
 }
 
 function getScore(userText, sheetKeyword) {
@@ -127,7 +132,7 @@ function createResponse2(row) {
         outputs: [
           {
             basicCard: {
-              title: row.question,
+              title: "",
               description: row.answer || "",
               thumbnail: {
                 imageUrl: row.imageUrl
@@ -146,12 +151,8 @@ function createResponse2(row) {
     });
   } else if (row.answer) {
     outputs.push({
-      //simpleText: {
-      //  text: row.answer
-      //}
-      textCard: {
-        title: row.question,
-        description: row.answer
+      simpleText: {
+        text: row.answer
       }
     });
   }
@@ -160,6 +161,16 @@ function createResponse2(row) {
     version: "2.0",
     template: {
       outputs
+    }
+  });
+}
+
+// 답변 형식 생성
+function createResponse(text) {
+  return Response.json({
+    version: "2.0",
+    template: {
+      outputs: [{simpleText: {text}}]
     }
   });
 }
