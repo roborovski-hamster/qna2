@@ -10,6 +10,11 @@ export default {
         //const context = getContextName(body); //out컨텍스트
 
         const category = getContextName(body);
+
+        if (category == "") {
+          return createResponse("먼저 리스트에서 카테고리를 선택해주세요. (예) 현수막지정게시대 Q&A ");
+        }
+        
         //let category = body.action?.params?.category || "";
         //if (category === "!없는카테고리") {
         //  category = getContextName(body) || "";
@@ -78,8 +83,6 @@ async function getAnswer(category, userKeyword, env) {
     //return bestAnswer;
     return bestRow;
   }
-
-  //return "해당 질문에 대한 답변이 없습니다.";
   return null;
 }
 
