@@ -127,7 +127,7 @@ function createResponse2(row) {
         outputs: [
           {
             basicCard: {
-              title: "",
+              title: row.question,
               description: row.answer || "",
               thumbnail: {
                 imageUrl: row.imageUrl
@@ -146,8 +146,12 @@ function createResponse2(row) {
     });
   } else if (row.answer) {
     outputs.push({
-      simpleText: {
-        text: row.answer
+      //simpleText: {
+      //  text: row.answer
+      //}
+      textCard: {
+        title: row.question,
+        description: row.answer
       }
     });
   }
