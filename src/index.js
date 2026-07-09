@@ -17,7 +17,7 @@ export default {
         const keyword = body.userRequest?.utterance || ""; //키워드
 
         const answer = await getAnswer(category,keyword,env); //답변
-        return createResponse2(answer);
+        return createResponse2(category, answer);
       } catch (error) {
         return createResponse("오류가 발생했습니다.");
       }
@@ -107,7 +107,7 @@ function getScore(userText, sheetKeyword) {
 
 
 // 답변 형식 생성
-function createResponse2(row) {
+function createResponse2(category, row) {
   if (!row) {
     return Response.json({
       version: "2.0",
@@ -115,7 +115,7 @@ function createResponse2(row) {
         outputs: [
           {
             simpleText: {
-              text: "해당 질문에 대한 답변이 없습니다."
+              text: `[${category}] 해당 질문에 대한 답변이 없습니다.`
             }
           }
         ]
@@ -132,7 +132,7 @@ function createResponse2(row) {
         outputs: [
           {
             basicCard: {
-              title: row.question,
+              title: `[${row.category}] ${row.question}`,
               description: row.answer || "",
               thumbnail: {
                 imageUrl: row.imageUrl
