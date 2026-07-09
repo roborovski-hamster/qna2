@@ -183,9 +183,20 @@ function createResponse(text) {
 function getContextName(body) {
   const contexts = body.contexts || body.userRequest?.contexts || body.bot?.contexts || body.action?.contexts || [];
   // 맨 마지막 out 컨텍스트 리턴 
-  // return contexts.length > 0? contexts[contexts.length - 1].name : "";
+ // return contexts.length > 0? contexts[contexts.length - 1].name : "";
  // 제일 첫번째 out 컨텍스트 리턴
-  return contexts.length > 0? contexts[0].name : "";
+  // return contexts.length > 0? contexts[0].name : "";
+
+   if (contexts.length === 0) {
+    return "";
+  }
+
+ //lifeSpan이 가장 많이 남은 context(카테고리)를 리턴한다.
+  const latestContext = contexts.reduce((max, current) => {
+    return (current.lifeSpan || 0) > (max.lifeSpan || 0) ? current : max;
+  });
+
+  return latestContext.name || "";
 }
 
 function createHtml(data) {
