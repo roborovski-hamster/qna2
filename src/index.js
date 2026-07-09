@@ -193,7 +193,7 @@ function getContextName(body) {
 
  //lifeSpan이 가장 많이 남은 context(카테고리)를 리턴한다.
   const latestContext = contexts.reduce((max, current) => {
-    return (current.lifeSpan || 0) > (max.lifeSpan || 0) ? current : max;
+    return (current.lifeSpan || 0) >= (max.lifeSpan || 0) ? current : max;
   });
 
   return latestContext.name || "";
