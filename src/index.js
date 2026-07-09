@@ -11,7 +11,7 @@ export default {
         const category = getContextName(body);
 
         if (category == "") {
-          return createResponse("먼저 리스트에서 카테고리를 선택해주세요. (예) 현수막지정게시대 Q&A ");
+          return createResponse("먼저 메뉴에서 '챗봇전환'을 눌러 카테고리를 선택해주세요.");
         }
         //const keyword = body.action?.params?.keyword || body.userRequest?.utterance || ""; //키워드
         const keyword = body.userRequest?.utterance || ""; //키워드
@@ -182,7 +182,10 @@ function createResponse(text) {
 //out 컨텍스트 읽어오기
 function getContextName(body) {
   const contexts = body.contexts || body.userRequest?.contexts || body.bot?.contexts || body.action?.contexts || [];
-  return contexts.length > 0? contexts[contexts.length - 1].name : "";
+  // 맨 마지막 out 컨텍스트 리턴 
+  // return contexts.length > 0? contexts[contexts.length - 1].name : "";
+ // 제일 첫번째 out 컨텍스트 리턴
+  return contexts.length > 0? contexts[0].name : "";
 }
 
 function createHtml(data) {
