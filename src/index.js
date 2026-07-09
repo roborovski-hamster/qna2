@@ -152,7 +152,7 @@ function createResponse2(row) {
   } else if (row.answer) {
     outputs.push({
       simpleText: {
-        text: `📌 ${row.question}\n\n${row.answer}`
+        text: `📂 ${row.category}\n📌 ${row.question}\n\n${row.answer}`
       }
     //textCard: {
     //  title: row.question,
