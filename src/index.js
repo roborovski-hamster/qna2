@@ -1,3 +1,26 @@
+let sheetCache = null;
+let sheetCacheTime = 0;
+
+async function getSheetData(env) {
+  const now = Date.now();
+  const cacheDuration = 5 * 60 * 1000; // 5분
+
+  if (sheetCache && (now - sheetCacheTime) < cacheDuration) {
+    //캐시 사용
+    return sheetCache;
+  }
+
+  //구글시트 조회
+  const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
+  const data = await response.json();
+
+  sheetCache = data;
+  sheetCacheTime = now;
+
+  return data;
+}
+
+
 //메인
 export default {
   async fetch(request, env) {
@@ -5,6 +28,7 @@ export default {
 
   if (request.method === "POST" && url.pathname === "/skill") {
       try {
+        const data = await getSheetData(env); // FAQ 목록
         const body = await request.json();
         //const context = getContextName(body); //out컨텍스트
 
@@ -16,14 +40,14 @@ export default {
         //const keyword = body.action?.params?.keyword || body.userRequest?.utterance || ""; //키워드
         const keyword = body.userRequest?.utterance || ""; //키워드
 
-        const answer = await getAnswer(category,keyword,env); //답변
+        const answer = await getAnswer(data, category,keyword,env); //답변
         return createResponse2(category, answer);
       } catch (error) {
         return createResponse("오류가 발생했습니다.");
       }
     } else if (url.pathname === "/faq") {
-      const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
-      const data = await response.json();
+      //const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
+      //const data = await response.json();
       const html = createHtml(data);
         return new Response(html, {
         headers: {
@@ -42,9 +66,9 @@ export default {
 
 
 
-async function getAnswer(category, userKeyword, env) {
-  const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
-  const data = await response.json();
+async function getAnswer(data, category, userKeyword, env) {
+  //const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
+  //const data = await response.json();
 
   let bestAnswer = "";
   let bestRow = null;
