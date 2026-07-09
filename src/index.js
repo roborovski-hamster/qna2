@@ -46,14 +46,27 @@ export default {
         return createResponse("오류가 발생했습니다.");
       }
     } else if (url.pathname === "/faq") {
+      try {
       //const response = await fetch(`${env.SHEET_API_URL}?token=${env.TOKEN}`);
       //const data = await response.json();
+      const data = await getSheetData(env); // FAQ 목록
       const html = createHtml(data);
         return new Response(html, {
         headers: {
       "Content-Type": "text/html; charset=UTF-8"
     }
   });
+      } catch(error) {
+        return new Response(`
+          <h2>오류가 발생했습니다.</h2>
+          <p>잠시 후 다시 이용해 주세요.</p>
+          `, {
+            status: 500,
+            headers: {
+              "Content-Type": "text/html; charset=UTF-8"
+            }
+          });
+      }
     } else {
       return Response.json(
         { error: "Not Found" },
