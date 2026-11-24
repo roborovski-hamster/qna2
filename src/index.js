@@ -99,7 +99,11 @@ export default {
 
       } catch (error) {
 
-        console.log("챗봇 처리 오류");
+        console.error("챗봇 처리 오류:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+    });
 
         return createResponse(
           "현재 답변 서비스 이용이 원활하지 않습니다.\n잠시 후 다시 이용해 주세요."
