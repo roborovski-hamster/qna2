@@ -84,15 +84,19 @@ export default {
         }
 
         // FAQ 목록 조회
+        const sheetStart = Date.now();
         const data = await getSheetData(env);
+        console.log("Google Sheet 조회 시간:", Date.now() - sheetStart, "ms");
 
         // Gemini를 이용한 FAQ 검색
+        const geminiStart = Date.now();
         const answer = await getAnswer(
           data,
           category,
           question,
           env
         );
+        console.log("Gemini 검색 시간:", Date.now() - geminiStart, "ms");
 
         // 구글시트 원본 답변 반환
         return createResponse2(category, answer);
