@@ -4,7 +4,7 @@ let sheetCacheTime = 0;
 
 // Gemini 설정
 const GEMINI_MODEL = "gemini-3.5-flash-lite";
-const GEMINI_TIMEOUT = 100000; //2500
+const GEMINI_TIMEOUT = 2500;
 
 
 // 구글시트 조회 및 캐시
