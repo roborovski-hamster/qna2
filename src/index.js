@@ -1,8 +1,8 @@
 import { getSheetData } from "./sheet.js";
 import { getAnswer } from "./gemini.js";
-import { createResponse, createResponse2 } from "./response.js";
+import { createResponse, createResponse2, clarifyResponse, rememberCategory } from "./response.js";
 import { containsPersonalInfo } from "./security.js";
-import { getContextName } from "./utils.js";
+import { readCategory } from "./context.js";
 import { createHtml } from "./faq.js";
 
 // 메인
@@ -17,15 +17,6 @@ export default {
       try {
 
         const body = await request.json();
-
-        // 선택한 카테고리 확인
-        const category = getContextName(body);
-
-        if (category === "") {
-          return createResponse(
-            "먼저 메뉴에서 '챗봇전환'을 눌러 카테고리를 선택해주세요."
-          );
-        }
 
         // 사용자 질문
         const question = String(
@@ -54,6 +45,8 @@ export default {
         const data = await getSheetData(env, request.url);
         console.log("Google Sheet 조회 시간:", Date.now() - sheetStart, "ms");
 
+        const category = readCategory(body, data);
+
         // Gemini를 이용한 FAQ 검색
         const geminiStart = Date.now();
         const answer = await getAnswer(
@@ -65,7 +58,9 @@ export default {
         console.log("Gemini 검색 시간:", Date.now() - geminiStart, "ms");
 
         // 구글시트 원본 답변 반환
-        return createResponse2(category, answer);
+        if (answer.status === "CLARIFY") return clarifyResponse(answer.categories, question);
+        const response = createResponse2(category, answer.row);
+        return answer.row ? rememberCategory(response, answer.row.category) : response;
 
       } catch (error) {
 

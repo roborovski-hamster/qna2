@@ -7,7 +7,7 @@ export function createResponse2(category, row) {
   if (!row) {
 
     return createResponse(
-      `[${category}]\n해당 질문에 대한 답변을 찾을 수 없습니다.\n\n질문을 구체적으로 입력하거나 선택한 카테고리를 확인해 주세요.`
+      `${category ? `[${category}]\n` : ""}해당 질문에 대한 답변을 찾을 수 없습니다.\n\n질문을 구체적으로 입력하거나 선택한 카테고리를 확인해 주세요.`
     );
   }
 
@@ -84,4 +84,20 @@ export function createResponse(text) {
       ]
     }
   });
+}
+
+// 선택 버튼에 원 질문을 포함하여 별도 질문 저장 없이 재검색
+export function clarifyResponse(categories, question) {
+  return Response.json({ version: "2.0", template: {
+    outputs: [{ simpleText: { text: "어떤 시설 또는 서비스에 대해 궁금하신가요?" } }],
+    quickReplies: categories.slice(0, 10).map(category => ({
+      label: category.slice(0, 14), action: "message", messageText: `${category} ${question}`.slice(0, 300)
+    }))
+  }});
+}
+
+export async function rememberCategory(response, category) {
+  const payload = await response.json();
+  payload.context = { values: [{ name: "faq_context", lifeSpan: 10, ttl: 600, params: { category: String(category) } }] };
+  return Response.json(payload);
 }

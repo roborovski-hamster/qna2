@@ -1,22 +1,11 @@
 import { GEMINI_MODEL, GEMINI_TIMEOUT } from "./config.js";
 import { SYSTEM_PROMPT } from "./prompt.js";
-import { normalize } from "./utils.js";
 
 // Gemini를 이용한 FAQ 답변 검색
 export async function getAnswer(data, category, question, env) {
 
-  // 선택한 카테고리의 FAQ만 추출
-  const rows = data.filter(row =>
-    normalize(row.category) === normalize(category)
-    && (row.answer || row.imageUrl)
-  );
-
-  if (rows.length === 0) {
-
-    console.log("해당 카테고리 FAQ 없음");
-
-    return null;
-  }
+  const rows = data.filter(row => row.category && (row.answer || row.imageUrl));
+  if (!rows.length) return { status: "NOT_FOUND", row: null };
 
   if (!env.GEMINI_API_KEY) {
     throw new Error("Gemini API Key 미설정");
@@ -26,6 +15,7 @@ export async function getAnswer(data, category, question, env) {
   // 임시 번호를 부여하므로 구글시트 수정 불필요
   const faqData = rows.map((row, index) => ({
     id: index + 1,
+    category: String(row.category),
     question: String(row.question || ""),
     answer: String(row.answer || "")
   }));
@@ -57,7 +47,7 @@ export async function getAnswer(data, category, question, env) {
             role: "user",
             parts: [{
               text: JSON.stringify({
-                category: category,
+                previousCategory: category,
                 question: question,
                 faq: faqData
               })
@@ -71,13 +61,15 @@ export async function getAnswer(data, category, question, env) {
             responseJsonSchema: {
               type: "object",
               properties: {
+                status: { type: "string", enum: ["MATCH", "CLARIFY", "NOT_FOUND"] },
+                categories: { type: "array", items: { type: "string" }, maxItems: 10 },
                 id: {
                   type: "integer",
                   minimum: 0,
                   maximum: rows.length
                 }
               },
-              required: ["id"]
+              required: ["status", "id", "categories"]
             },
 
             thinkingConfig: {
@@ -125,47 +117,17 @@ export async function getAnswer(data, category, question, env) {
     }
 
     // JSON 응답 분석
-    const matchedId = JSON.parse(text).id;
-
-    // 적합한 FAQ가 없는 경우
-    if (matchedId === 0) {
-
-      console.log("Gemini 검색 결과 없음");
-
-      return null;
+    const { status, id, categories } = JSON.parse(text);
+    if (!Array.isArray(categories) || !Number.isInteger(id)) throw new Error("잘못된 검색 결과");
+    if (status === "NOT_FOUND" && id === 0) return { status, row: null };
+    if (status === "CLARIFY" && id === 0) {
+      const allowed = [...new Set(rows.map(row => String(row.category)))];
+      const selected = allowed.filter(c => categories.includes(c)).slice(0, 10);
+      return { status, categories: selected.length ? selected : allowed.slice(0, 10) };
     }
-
-    // FAQ 번호 유효성 검사
-    if (
-      !Number.isInteger(matchedId) ||
-      matchedId < 1 ||
-      matchedId > rows.length
-    ) {
-
-      console.log("Gemini FAQ 번호 오류");
-
-      throw new Error("잘못된 FAQ 번호");
-    }
-
-    // 구글시트 원본 데이터 추출
-    const matchedRow = rows[matchedId - 1];
-
-    // 카테고리 재검증
-    if (
-      normalize(matchedRow.category) !== normalize(category)
-    ) {
-
-      console.log("FAQ 카테고리 불일치");
-
-      return null;
-    }
-
-    console.log("Gemini 검색 성공");
-    console.log("선택된 FAQ 번호:", matchedId);
-
-    // Gemini 생성 답변이 아닌
-    // 구글시트 원본 행 반환
-    return matchedRow;
+    if (status !== "MATCH" || id < 1 || id > rows.length) throw new Error("잘못된 FAQ 번호");
+    console.log("선택된 FAQ 번호:", id);
+    return { status, row: rows[id - 1] };
 
   } catch (error) {
 
