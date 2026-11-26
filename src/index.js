@@ -254,7 +254,7 @@ async function getAnswer(data, category, question, env) {
 
           systemInstruction: {
             parts: [{
-              text: export const SYSTEM_PROMPT = `
+              text: `
 당신은 공공기관의 FAQ 검색 전용 도구입니다.
 사용자의 질문을 분석하여 제공된 FAQ 목록에서 가장 적합한 id를 반환하세요.
 
